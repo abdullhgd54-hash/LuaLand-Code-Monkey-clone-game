@@ -1,43 +1,75 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class Lander : MonoBehaviour
 {
+    public event EventHandler OnUpForce;
+    public event EventHandler OnLeftForce;
+    public event EventHandler OnRightForce;
+    public event EventHandler OnBeforeForce;
+    public event EventHandler OnCoinPickup;
+    public event EventHandler<OnLandedEventArgs> OnLanded; public class OnLandedEventArgs{ public int score; }
+
     private Rigidbody2D landerRigidbody2D;
+    private float fuelAmount = 10f;
+
+    public static Lander Instance { get; private set; }
 
     private void Awake()
     {
+        Instance = this;
         landerRigidbody2D = GetComponent<Rigidbody2D>();
     }
     private void FixedUpdate()
     {
+        OnBeforeForce(this, EventArgs.Empty);
+
+        if(fuelAmount <= 0)
+            return;
         var current = Keyboard.current;
+        
+        if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
+        {
+            ConsumeFuel();
+        }
+
+
 
         if (current.wKey.isPressed)
         {
             float force = 700f;
             landerRigidbody2D.AddForce(force * transform.up * Time.deltaTime);
+            OnUpForce(this, EventArgs.Empty);
         }
 
         if (current.dKey.isPressed)
         {
             float turnSpeed = -200f;
             landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
+            OnRightForce(this, EventArgs.Empty);
         }
 
         if (current.aKey.isPressed)
         {
             float turnSpeed = 200f;
             landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
+            OnLeftForce(this, EventArgs.Empty);
         }
+    }
+
+    private void ConsumeFuel()
+    {
+        float fuelConsumptionAmount = 1f;
+        fuelAmount -= fuelConsumptionAmount * Time.deltaTime; 
     }
 
     private void OnCollisionEnter2D(Collision2D collision2D)
     {
         if (!collision2D.gameObject.TryGetComponent(out LandingPad landingPad))
         {
-            Debug.Log($"Crashed on the terrain");
+            //Crashed on the terrain
             return;
         }
 
@@ -46,7 +78,7 @@ public class Lander : MonoBehaviour
 
         if(relativeVelocityMagnitude > softLandingVelocityMagnitude)
         {
-            Debug.Log("landed to hard");
+            //landed to hard
             return;
         }
 
@@ -55,12 +87,12 @@ public class Lander : MonoBehaviour
 
         if(dotVector < minDotVector)
         {
-            Debug.Log("landed too steep");
+            //landed too steep
             return;
         }
 
 
-        Debug.Log("landed successfully");
+        //landed successfully
 
         float maxLandingAngleScore = 100f;  
         float angleRate = Math.Abs(dotVector - 1f);  
@@ -73,5 +105,21 @@ public class Lander : MonoBehaviour
         int score = (int)(landingAngleScore + landingSpeedScore) * landingPad.ScoreMultiplier;
 
         Debug.Log($"score: {score}");
+        OnLanded(this,new OnLandedEventArgs{ score = score });
+    }
+    
+    private void OnTriggerEnter2D(Collider2D collider2D)
+    {
+        if(collider2D.gameObject.TryGetComponent(out FuelPickup fuelPickup))
+        {
+           fuelAmount += fuelPickup.Amount;
+           fuelPickup.DestroySelf(); 
+        }
+
+        if(collider2D.gameObject.TryGetComponent(out CoinPickup coinPickup))
+        {
+           OnCoinPickup(this, EventArgs.Empty);
+           coinPickup.DestroySelf(); 
+        }
     }
 }
