@@ -7,10 +7,21 @@ public class GameManager : MonoBehaviour
     
 
     private int score;
+    private float time;
+    public static GameManager Instance { get; private set; }
+    private void Awake()
+    {
+        Instance = this;
+    }
     private void Start()
     {
         Lander.Instance.OnCoinPickup += Lander_OnCoinPickup;
         Lander.Instance.OnLanded += Lander_OnLanded;
+    }
+
+    private void Update()
+    {
+        time += Time.deltaTime;
     }
 
     private void Lander_OnLanded(object sender, Lander.OnLandedEventArgs e)
@@ -28,4 +39,8 @@ public class GameManager : MonoBehaviour
         score += scoreAmount;
         Debug.Log(score);
     }
+
+    public int GetScore() => score;
+
+    public float GetTime() => time;
 }
