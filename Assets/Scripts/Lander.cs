@@ -10,7 +10,24 @@ public class Lander : MonoBehaviour
     public event EventHandler OnRightForce;
     public event EventHandler OnBeforeForce;
     public event EventHandler OnCoinPickup;
-    public event EventHandler<OnLandedEventArgs> OnLanded; public class OnLandedEventArgs{ public int score; }
+    public event EventHandler<OnLandedEventArgs> OnLanded;
+    public class OnLandedEventArgs
+    { 
+        public int score;
+        public LandingType landingType;
+        public float angle;
+        public float landingSpeed;
+        public float scoreMultiplier;
+    }
+
+    public enum LandingType
+    {
+        Success,
+        WrongLandingArea,
+        TooSteepAngle,
+        TooFastLanding
+
+    } 
 
     private Rigidbody2D landerRigidbody2D;
     private float fuelAmount;
@@ -72,6 +89,14 @@ public class Lander : MonoBehaviour
         if (!collision2D.gameObject.TryGetComponent(out LandingPad landingPad))
         {
             //Crashed on the terrain
+            OnLanded(this,new OnLandedEventArgs
+            {
+             landingType = LandingType.WrongLandingArea,
+             score = 0,
+             angle = 0,
+             landingSpeed = 0,
+             scoreMultiplier = 0
+            });
             return;
         }
 
@@ -81,6 +106,14 @@ public class Lander : MonoBehaviour
         if(relativeVelocityMagnitude > softLandingVelocityMagnitude)
         {
             //landed to hard
+            OnLanded(this,new OnLandedEventArgs
+            {
+             landingType = LandingType.TooFastLanding,
+             score = 0,
+             angle = 0,
+             landingSpeed = relativeVelocityMagnitude,
+             scoreMultiplier = 0
+            });
             return;
         }
 
@@ -90,6 +123,14 @@ public class Lander : MonoBehaviour
         if(dotVector < minDotVector)
         {
             //landed too steep
+            OnLanded(this,new OnLandedEventArgs
+            {
+             landingType = LandingType.TooSteepAngle,
+             score = 0,
+             angle = dotVector,
+             landingSpeed = relativeVelocityMagnitude,
+             scoreMultiplier = 0
+            });
             return;
         }
 
@@ -107,7 +148,14 @@ public class Lander : MonoBehaviour
         int score = (int)(landingAngleScore + landingSpeedScore) * landingPad.ScoreMultiplier;
 
         Debug.Log($"score: {score}");
-        OnLanded(this,new OnLandedEventArgs{ score = score });
+        OnLanded(this,new OnLandedEventArgs
+        {
+             score = score,
+             angle = dotVector,
+             landingSpeed = relativeVelocityMagnitude,
+             landingType = LandingType.Success,
+             scoreMultiplier = landingPad.ScoreMultiplier
+         });
     }
     
     private void OnTriggerEnter2D(Collider2D collider2D)
