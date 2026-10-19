@@ -10,6 +10,11 @@ public class Lander : MonoBehaviour
     public event EventHandler OnRightForce;
     public event EventHandler OnBeforeForce;
     public event EventHandler OnCoinPickup;
+    public event EventHandler<OnStateChangedEventArgs> OnStateChanged;
+    public class OnStateChangedEventArgs
+    {
+        public State state;
+    }
     public event EventHandler<OnLandedEventArgs> OnLanded;
     public class OnLandedEventArgs
     { 
@@ -28,54 +33,85 @@ public class Lander : MonoBehaviour
         TooFastLanding
 
     } 
+    public enum State
+    {
+        WaitingToStart,
+        Normal,
+        GameOver
+    } 
 
+    private const float GRAVITY_NORMAL = 0.7f;
     private Rigidbody2D landerRigidbody2D;
     private float fuelAmount;
     private float fuelAmountMax = 10f;
+    private State state;
 
     public static Lander Instance { get; private set; }
 
     private void Awake()
     {
         Instance = this;
+
         fuelAmount = fuelAmountMax;
+        state = State.WaitingToStart;
+
         landerRigidbody2D = GetComponent<Rigidbody2D>();
+        landerRigidbody2D.gravityScale = 0f;
     }
     private void FixedUpdate()
     {
         OnBeforeForce(this, EventArgs.Empty);
 
-        if(fuelAmount <= 0)
-            return;
         var current = Keyboard.current;
+
+        switch (state)
+        {
+            case State.WaitingToStart:
+                if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
+                {
+                    landerRigidbody2D.gravityScale = GRAVITY_NORMAL;
+                    SetState(State.Normal);                
+                }
+                break;
+            case State.Normal:
+                if(fuelAmount <= 0)
+                    return;
+                    
+                if (current.wKey.isPressed)
+                {
+                    float force = 700f;
+                    landerRigidbody2D.AddForce(force * transform.up * Time.deltaTime);
+                    OnUpForce(this, EventArgs.Empty);
+                }
+
+                if (current.dKey.isPressed)
+                {
+                    float turnSpeed = -200f;
+                    landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
+                    OnRightForce(this, EventArgs.Empty);
+                }
+
+                if (current.aKey.isPressed)
+                {
+                    float turnSpeed = 200f;
+                    landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
+                    OnLeftForce(this, EventArgs.Empty);
+                }
+                
+                if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
+                {
+                    ConsumeFuel();
+                }
+                break;
+            case State.GameOver:
+                break;
+        }
+
         
-        if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
-        {
-            ConsumeFuel();
-        }
+        
 
 
 
-        if (current.wKey.isPressed)
-        {
-            float force = 700f;
-            landerRigidbody2D.AddForce(force * transform.up * Time.deltaTime);
-            OnUpForce(this, EventArgs.Empty);
-        }
-
-        if (current.dKey.isPressed)
-        {
-            float turnSpeed = -200f;
-            landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
-            OnRightForce(this, EventArgs.Empty);
-        }
-
-        if (current.aKey.isPressed)
-        {
-            float turnSpeed = 200f;
-            landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
-            OnLeftForce(this, EventArgs.Empty);
-        }
     }
 
     private void ConsumeFuel()
@@ -97,6 +133,7 @@ public class Lander : MonoBehaviour
              landingSpeed = 0,
              scoreMultiplier = 0
             });
+            SetState(State.GameOver);
             return;
         }
 
@@ -114,6 +151,7 @@ public class Lander : MonoBehaviour
              landingSpeed = relativeVelocityMagnitude,
              scoreMultiplier = 0
             });
+            SetState(State.GameOver);
             return;
         }
 
@@ -131,6 +169,7 @@ public class Lander : MonoBehaviour
              landingSpeed = relativeVelocityMagnitude,
              scoreMultiplier = 0
             });
+            SetState(State.GameOver);
             return;
         }
 
@@ -156,6 +195,7 @@ public class Lander : MonoBehaviour
              landingType = LandingType.Success,
              scoreMultiplier = landingPad.ScoreMultiplier
          });
+         SetState(State.GameOver);
     }
     
     private void OnTriggerEnter2D(Collider2D collider2D)
@@ -177,6 +217,11 @@ public class Lander : MonoBehaviour
         }
     }
 
+    private void SetState(State state)
+    {
+        this.state = state;
+        OnStateChanged(this, new OnStateChangedEventArgs{state = state});
+    }
     public float GetSpeedX() => landerRigidbody2D.linearVelocityX;
     public float GetSpeedY() => landerRigidbody2D.linearVelocityY;
     public float GetFeul() => fuelAmount;

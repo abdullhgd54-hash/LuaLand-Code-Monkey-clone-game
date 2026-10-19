@@ -1,5 +1,7 @@
 
 using System;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class LanderVisuals : MonoBehaviour
@@ -7,6 +9,7 @@ public class LanderVisuals : MonoBehaviour
     [SerializeField] private ParticleSystem leftThrusterParticleSystem;
     [SerializeField] private ParticleSystem midThrusterParticleSystem;
     [SerializeField] private ParticleSystem rightThrusterParticleSystem;
+    [SerializeField] private GameObject landerExplosionVfx;
 
     private Lander lander;
     private void Awake()
@@ -17,6 +20,24 @@ public class LanderVisuals : MonoBehaviour
         lander.OnRightForce += Lander_OnRightForce; 
         lander.OnLeftForce += Lander_OnLeftForce; 
         lander.OnBeforeForce += Lander_OnBeforeForce; 
+    }
+
+    private void Start()
+    {
+        lander.OnLanded += Lander_OnLanded;
+    }
+
+    private void Lander_OnLanded(object sender, Lander.OnLandedEventArgs e)
+    {
+        switch (e.landingType)
+        {
+            case Lander.LandingType.TooFastLanding:
+            case Lander.LandingType.TooSteepAngle:
+            case Lander.LandingType.WrongLandingArea:
+                Instantiate(landerExplosionVfx,transform.position,quaternion.identity);
+                gameObject.SetActive(false);
+                break;
+        }
     }
 
     private void Lander_OnBeforeForce(object sender, EventArgs e)
