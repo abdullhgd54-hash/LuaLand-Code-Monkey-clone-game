@@ -29,8 +29,8 @@ public class LandedUi : MonoBehaviour
     private void Lander_OnLanded(object sender, Lander.OnLandedEventArgs e)
     {
         statusTextMesh.text =
-            Mathf.Round(e.landingSpeed) + "\n" +
-            Mathf.Round(e.angle) + "\n" +
+            Mathf.Round(e.landingSpeed)  + "\n" +
+            Mathf.Round(e.angle * 100f) + "\n" +
             e.scoreMultiplier + "\n";
 
         if(e.landingType == Lander.LandingType.Success)

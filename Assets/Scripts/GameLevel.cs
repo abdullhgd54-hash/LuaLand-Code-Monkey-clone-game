@@ -7,8 +7,12 @@ public class GameLevel : MonoBehaviour
 {
     [SerializeField] private int levelNumber;
     public int LevelNumber => levelNumber;
-    [SerializeField] private Transform landerStartTransform;
-    public Vector3 landerStartPosition => landerStartTransform.position;
+
+    [SerializeField] private Transform landerStartTransform;    public Vector3 landerStartPosition => landerStartTransform.position;
+
+    [SerializeField] private Transform cameraStartTargetTransform;  public Transform CameraStartTargetPosition => cameraStartTargetTransform;
+    
+    [SerializeField] private float zoomedOutOrthographicSize;   public float ZoomedOutOrthographicSize => zoomedOutOrthographicSize;
 
     private void Start()
     {

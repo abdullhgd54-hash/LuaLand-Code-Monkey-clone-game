@@ -14,6 +14,8 @@ public class StatusUi : MonoBehaviour
     [SerializeField] private GameObject speedRightArrowDameObject;
     [SerializeField] private Image fuelImage;
 
+
+    private void Start() => gameObject.SetActive(false);
     private void Update() => UpdateStatusTextMesh();
     private void UpdateStatusTextMesh()
     {
