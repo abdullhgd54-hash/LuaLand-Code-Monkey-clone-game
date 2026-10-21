@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    
-
+    private static int currentLevelNumber = 1;
+    public int CurrentLevelNumber => currentLevelNumber;
+    [SerializeField] private List<GameLevel> gameLevels;
     private int score;
     private float time;
     private bool isTimerActive;
@@ -20,7 +23,10 @@ public class GameManager : MonoBehaviour
         Lander.Instance.OnCoinPickup += Lander_OnCoinPickup;
         Lander.Instance.OnLanded += Lander_OnLanded;
         Lander.Instance.OnStateChanged += Lander_OnStateChanged;
+
+        LoadCurrentLevel();
     }
+
 
     private void Lander_OnStateChanged(object sender, Lander.OnStateChangedEventArgs e)
     {
@@ -46,10 +52,32 @@ public class GameManager : MonoBehaviour
     private void AddScore(int scoreAmount)
     {
         score += scoreAmount;
-        Debug.Log(score);
     }
 
     public int GetScore() => score;
 
     public float GetTime() => time;
+    private void LoadCurrentLevel()
+    {
+        foreach (var gameLevel in gameLevels)
+        {
+            if(gameLevel.LevelNumber == currentLevelNumber)
+            {
+                GameLevel spawnedGameLevel = Instantiate(gameLevel,Vector3.zero,Quaternion.identity);
+                Lander.Instance.transform.position = spawnedGameLevel.landerStartPosition;
+            }
+        }
+    }
+
+    public void RetryLevel()
+    {
+        SceneManager.LoadScene(3);
+    }
+    public void GoToNextLevel()
+    {
+        if(currentLevelNumber++ >= gameLevels.Count)
+            currentLevelNumber = 1;
+        SceneManager.LoadScene(3);
+    }
+
 }

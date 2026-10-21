@@ -25,6 +25,7 @@ public class StatusUi : MonoBehaviour
         fuelImage.fillAmount = Lander.Instance.GetFeulNormalized();
 
         statusTextMesh.text = 
+            GameManager.Instance.CurrentLevelNumber + "\n" +
             GameManager.Instance.GetScore() + "\n" +
             Mathf.Round(GameManager.Instance.GetTime()) + "\n" +
             Mathf.Abs(Mathf.Round(Lander.Instance.GetSpeedX() * 10f)) + "\n" +
