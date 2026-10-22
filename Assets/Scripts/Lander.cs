@@ -62,12 +62,15 @@ public class Lander : MonoBehaviour
     {
         OnBeforeForce(this, EventArgs.Empty);
 
-        var current = Keyboard.current;
+        var input = GameInput.Instance;
+        var movementInput = input.MovementInput;
+        
+        
 
         switch (state)
         {
             case State.WaitingToStart:
-                if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
+                if(input.IsUpActionPressed() || input.IsRightActionPressed() || input.IsLeftActionPressed() || movementInput != Vector2.zero)
                 {
                     landerRigidbody2D.gravityScale = GRAVITY_NORMAL;
                     SetState(State.Normal);                
@@ -77,28 +80,29 @@ public class Lander : MonoBehaviour
                 if(fuelAmount <= 0)
                     return;
                     
-                if (current.wKey.isPressed)
+                float movementDeadzone = 0.4f;    
+                if (input.IsUpActionPressed() || movementInput.y > movementDeadzone)
                 {
                     float force = 700f;
                     landerRigidbody2D.AddForce(force * transform.up * Time.deltaTime);
                     OnUpForce(this, EventArgs.Empty);
                 }
 
-                if (current.dKey.isPressed)
+                if (input.IsRightActionPressed() || movementInput.x > movementDeadzone)
                 {
                     float turnSpeed = -200f;
                     landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
                     OnRightForce(this, EventArgs.Empty);
                 }
 
-                if (current.aKey.isPressed)
+                if (input.IsLeftActionPressed() || movementInput.x < -movementDeadzone)
                 {
                     float turnSpeed = 200f;
                     landerRigidbody2D.AddTorque(turnSpeed * Time.deltaTime);
                     OnLeftForce(this, EventArgs.Empty);
                 }
                 
-                if(current.wKey.isPressed || current.aKey.isPressed || current.dKey.isPressed)
+                if(input.IsUpActionPressed() || input.IsRightActionPressed() || input.IsLeftActionPressed() || movementInput != Vector2.zero)
                 {
                     ConsumeFuel();
                 }
