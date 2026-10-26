@@ -16,14 +16,16 @@ public class LandedUi : MonoBehaviour
     {
         nextButton.onClick.AddListener(() =>
         {
-            SceneManager.LoadScene(3);
+            SceneLoader.LoadScene(SceneLoader.Scene.GameScene);
             nextButtonClickAction();
         });
+
     }
     private void Start()
     {
         Lander.Instance.OnLanded += Lander_OnLanded;
         gameObject.SetActive(false);
+        nextButton.Select();
     }
 
     private void Lander_OnLanded(object sender, Lander.OnLandedEventArgs e)
@@ -51,5 +53,6 @@ public class LandedUi : MonoBehaviour
 
 
         gameObject.SetActive(true);
+
     }
 }
