@@ -223,6 +223,22 @@ public class Lander : MonoBehaviour
            coinPickup.DestroySelf(); 
         }
     }
+    private void OnTriggerExit2D(Collider2D collider2D)
+    {
+        if(collider2D.gameObject.TryGetComponent(out LevelWall levelWall))
+        {
+           OnLanded(this,new OnLandedEventArgs
+            {
+             landingType = LandingType.WrongLandingArea,
+             score = 0,
+             angle = 0,
+             landingSpeed = 0,
+             scoreMultiplier = 0
+            });
+            SetState(State.GameOver);
+            return;
+        }
+    }
 
     private void SetState(State state)
     {
